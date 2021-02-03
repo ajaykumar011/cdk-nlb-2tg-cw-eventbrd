@@ -1,7 +1,9 @@
 # Welcome to your CDK TypeScript project!
 
+## Project Description
+
 1. Active- Passive Setup: The setup of applications is as follows:
-a) Network load balancer -- listener on port 8080 -- two target groups - primary(MyTG1) and secondary(MyTG2)
+a) Network load balancer -- listener on port 143 -- two target groups - primary(MyTG1) and secondary(MyTG2)
 the traffic by default goes to primary TG based on the setting on the listener to send 100% traffic to primary.
 
 b) When the primary instance goes down, we need to trigger a lambda to switch the traffic to secondary.
@@ -32,11 +34,11 @@ cdk deploy --all --profile <profile_name>
 Just terminate the Primary Instance and you will find the Listener is automatically modified and pointed to Secondary Target Group
 
 ## AWS Services used
-Virtual Private Network
-Network Load Balancer
-EC2 (Windows Deployment with Userdata)
-EventBridge (Cloudwatch) as Trigger
-AWS Lambda (python function to change the NLB Listener Pointing)
+* `Virtual Private Network`
+* `Network Load Balancer`
+* `EC2 (Windows Deployment with Userdata)`
+* `EventBridge (Cloudwatch) as Trigger`
+* `AWS Lambda (python function to change the NLB Listener Pointing)`
 
 ## Other Useful commands
 
