@@ -30,6 +30,10 @@ aws-cli/2.1.23 Python/3.7.9 Windows/10 exe/AMD64 prompt/off
 * `cdk synth --profile <profile_name>`
 * `cdk deploy --all --profile <profile_name>`
 
+## Deploying
+The Project Outputs the NLB ARN and you can browse the site on port number 443
+like 'production-nlb-7e566ecbbe652347.elb.us-east-1.amazonaws.com:443
+
 ## Functionality Check
 Just terminate the Primary Instance and you will find the Listener is automatically modified and pointed to Secondary Target Group
 
