@@ -8,7 +8,6 @@ print('Loading function')
 
 client = boto3.client('elbv2')
 def lambda_handler(event, context):
-    #print("Received event: " + json.dumps(event, indent=2))
     target1_arn = os.environ['TARGET1_ARN']
     target2_arn = os.environ['TARGET2_ARN']
     listener_arn = os.environ['LISTENER_ARN']

@@ -9,11 +9,11 @@
     "@aws-cdk/aws-kms:defaultKeyPolicies": true,
     "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
     "project":{
-      "tag_value" : "Cloudzone",
       "region": "us-east-1",
       "account": "530470953206",
-      "ec2_type": "t2.micro",
-      "key_name": "ajay_key"      
+      "key_name": "ajay_key",
+      "nlb_name": "production-nlb",
+      "event_bus": "arn:aws:events:us-east-1:530470953206:event-bus/default"
     }
   }
 }
