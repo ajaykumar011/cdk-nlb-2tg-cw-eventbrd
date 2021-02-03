@@ -11,7 +11,7 @@
     "project":{
       "tag_value" : "Cloudzone",
       "region": "us-east-1",
-      "account": "304962413949",
+      "account": "530470953206",
       "ec2_type": "t2.micro",
       "key_name": "ajay_key"      
     }

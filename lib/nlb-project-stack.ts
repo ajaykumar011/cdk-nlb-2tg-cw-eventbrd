@@ -13,6 +13,7 @@ const busCdk = require('@aws-cdk/aws-events');
 const ruleCdk = require('@aws-cdk/aws-events');
 const targets = require('@aws-cdk/aws-events-targets');
 import {Role, ServicePrincipal, ManagedPolicy} from '@aws-cdk/aws-iam';
+import { EventBus } from '@aws-cdk/aws-events';
 
 export class NlbProjectStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -162,13 +163,13 @@ export class NlbProjectStack extends cdk.Stack {
       code: new lambda.InlineCode(readFileSync(srcPath, { encoding: 'utf-8', })),
       handler: 'index.lambda_handler',
       //handler: 'lambda_function.lambda_handler',
-      timeout: cdk.Duration.seconds(60),
+      timeout: cdk.Duration.seconds(30),
       memorySize: 128,
       runtime: lambda.Runtime.PYTHON_3_7,
       reservedConcurrentExecutions: 1,
       retryAttempts: 1,
       maxEventAge: cdk.Duration.hours(1),
-      vpc: vpc,
+      //vpc: vpc,
       role: myRole, // user-provided role
       environment: {
           "LOG_LEVEL": "INFO",
@@ -179,20 +180,30 @@ export class NlbProjectStack extends cdk.Stack {
       }
     });
     //lambdaFunction.connections.allowDefaultPortFromAnyIpv4
-    lambdaFunction.connections.allowFromAnyIpv4;
+    //lambdaFunction.connections.allowFromAnyIpv4;
 
     //event bus
-    const bus = new busCdk.EventBus(this,'ProfileEventBus',{
-      eventBusName: "ProfileBus"
+    // const bus = new busCdk.EventBus(this,'ProfileEventBus',{
+    //   eventBusName: "ProfileBus"
       
-    })
+    // })
+
+    // const defaultbus = busCdk.EventBus.fromEventBusArn(this, "eventbusdefaultid", {
+    //   eventBusArn: "arn:aws:events:us-east-1:530470953206:event-bus/default",
+    //   });
+
+    const defaultbus = EventBus.fromEventBusArn(this, "defid", "arn:aws:events:us-east-1:530470953206:event-bus/default");
 
     const rule = new ruleCdk.Rule(this, "newRule", {
-      description: "description",
+      description: "Trigger Lamba when Instance1 goes down",
       eventPattern: {
-        source: ["aws.ec2"]
-      },
-      eventBus: bus
+        'source': ["aws.ec2"],
+        'detail-type' : ["EC2 Instance State-change Notification"],
+        'detail': {
+          "state": ["stopping", "shutting-down"],
+          "instance-id": [instance1_id],
+        }},
+      eventBus: defaultbus
     });
 
     //const func = lambda.Function.fromFunctionArn(this, 'testLambda', 'arn:aws:lambda:us-east-1:304962413949:function:helloworld')
