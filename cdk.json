@@ -7,6 +7,13 @@
     "@aws-cdk/aws-ecr-assets:dockerIgnoreSupport": true,
     "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
     "@aws-cdk/aws-kms:defaultKeyPolicies": true,
-    "@aws-cdk/aws-s3:grantWriteWithoutAcl": true
+    "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
+    "project":{
+      "tag_value" : "Cloudzone",
+      "region": "us-east-1",
+      "account": "304962413949",
+      "ec2_type": "t2.micro",
+      "key_name": "ajay_key"      
+    }
   }
 }
