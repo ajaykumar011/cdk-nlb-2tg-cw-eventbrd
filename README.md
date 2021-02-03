@@ -9,26 +9,26 @@ the traffic by default goes to primary TG based on the setting on the listener t
 b) When the primary instance goes down, we need to trigger a lambda to switch the traffic to secondary.
 
 ## Prerequisite
-λ npm install -g aws-cdk
-λ cdk --version
+* `λ npm install -g aws-cdk`
+* `λ cdk --version`
 1.87.1 (build 9eeaa93)
 
-λ npm install -g typescript
+* `λ npm install -g typescript`
 #Clone the Repository by using Gitclone and enter into the directory.
-λ npm install
+* `λ npm install`
 
 Install AWS Cli version2 by using below link:
 https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html#cliv2-windows-install
 download windows installer from above link and install aws cli (version2)
 
-λ aws --version
+* `λ aws --version`
 aws-cli/2.1.23 Python/3.7.9 Windows/10 exe/AMD64 prompt/off
 
 ## Deploying
-* cdk bootstrap aws://<aws_account>:/<region> --profile <profile_name>
-* cdk ls
-* cdk synth --profile <profile_name>
-* cdk deploy --all --profile <profile_name>
+* `cdk bootstrap aws://<aws_account>:/<region> --profile <profile_name>`
+* `cdk ls`
+* `cdk synth --profile <profile_name>`
+* `cdk deploy --all --profile <profile_name>`
 
 ## Functionality Check
 Just terminate the Primary Instance and you will find the Listener is automatically modified and pointed to Secondary Target Group
