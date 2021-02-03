@@ -25,10 +25,10 @@ download windows installer from above link and install aws cli (version2)
 aws-cli/2.1.23 Python/3.7.9 Windows/10 exe/AMD64 prompt/off
 
 ## Deploying
-cdk bootstrap aws://<aws_account>:/<region> --profile <profile_name>
-cdk ls
-cdk synth --profile <profile_name>
-cdk deploy --all --profile <profile_name>
+* cdk bootstrap aws://<aws_account>:/<region> --profile <profile_name>
+* cdk ls
+* cdk synth --profile <profile_name>
+* cdk deploy --all --profile <profile_name>
 
 ## Functionality Check
 Just terminate the Primary Instance and you will find the Listener is automatically modified and pointed to Secondary Target Group
