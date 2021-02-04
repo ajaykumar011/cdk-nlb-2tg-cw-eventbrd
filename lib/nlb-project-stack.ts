@@ -67,6 +67,27 @@ export class NlbProjectStack extends cdk.Stack {
                               securityGroup: ec2_security_group,
                               userData: ec2.UserData.custom(user_data), 
                               keyName: key_name});
+     //Instance3
+     const instance3 = new ec2.Instance(this, 'Instanceid3', {
+      vpc: vpc, 
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, 
+                              ec2.InstanceSize.MICRO), 
+                              machineImage: windows_ami, 
+                              allowAllOutbound: true,
+                              securityGroup: ec2_security_group,
+                              userData: ec2.UserData.custom(user_data), 
+                              keyName: key_name});  
+      //Instance4
+      const instance4 = new ec2.Instance(this, 'Instanceid4', {
+       vpc: vpc, 
+        instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, 
+                        ec2.InstanceSize.MICRO), 
+                               machineImage: windows_ami, 
+                               allowAllOutbound: true,
+                               securityGroup: ec2_security_group,
+                               userData: ec2.UserData.custom(user_data), 
+                               keyName: key_name});     
+
     //Network Load Balancer
     const nlb_name = this.node.tryGetContext('project')['nlb_name'];
     const nlb =  new elbv2.NetworkLoadBalancer(this, "myNLB", {
@@ -76,19 +97,36 @@ export class NlbProjectStack extends cdk.Stack {
     });
     const instance1_id=instance1.instanceId;
     const instance2_id=instance2.instanceId;
+    const instance3_id=instance3.instanceId;
+    const instance4_id=instance4.instanceId;
 
-    const target1 = new elbv2.NetworkTargetGroup(this, "TGroup1", {
+    const l1target1 = new elbv2.NetworkTargetGroup(this, "L1Primary", {
                                     vpc : vpc, 
                                     port:80, 
                                     targets: [new elbtarget.InstanceIdTarget(instance1_id, 80)],
-                                    targetGroupName: "PrimaryTg1"});
-    const target2 = new elbv2.NetworkTargetGroup(this, "TGroup2", {
+                                    targetGroupName: "L1Primary"});
+    const l1target2 = new elbv2.NetworkTargetGroup(this, "L1Secondary", {
                                     vpc : vpc, 
                                     port:80, 
                                     targets: [new elbtarget.InstanceIdTarget(instance2_id, 80)],
-                                    targetGroupName: "SecondaryTg2"});     
+                                    targetGroupName: "L1Secondary"});     
     const listener1 = nlb.addListener("Listener1", {
-                            port: 443, defaultTargetGroups:[target1]});
+                            port: 443, defaultTargetGroups:[l1target1]});
+
+    const l2target1 = new elbv2.NetworkTargetGroup(this, "L2Primary", {
+                                    vpc : vpc, 
+                                    port:80, 
+                                    targets: [new elbtarget.InstanceIdTarget(instance3_id, 80)],
+                                    targetGroupName: "L2Primary"});
+    const l2target2 = new elbv2.NetworkTargetGroup(this, "L2Secondary", {
+                                     vpc : vpc, 
+                                     port:80, 
+                                     targets: [new elbtarget.InstanceIdTarget(instance4_id, 80)],
+                                     targetGroupName: "L2Secondary"});     
+    const listener2 = nlb.addListener("Listener2", {
+                      port: 8080, defaultTargetGroups:[l2target1]});
+
+
     new cdk.CfnOutput(this, "ElbDomain", {value: nlb.loadBalancerDnsName});
 
     //Lambda Role
@@ -101,12 +139,13 @@ export class NlbProjectStack extends cdk.Stack {
     myRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2FullAccess'));
    
     //Lambda Function
-    const srcPath = `${__dirname}/lambda_function.py`;
+    const funcPath1 = `${__dirname}/l1_lambda_function.py`;
+    const funcPath2 = `${__dirname}/l2_lambda_function.py`;
 
-    const lambdaFunction = new lambda.Function(this, 'lambdafuncid', { 
-      functionName: 'listener_modify_function',
-      description: "A function which changes the target_group",
-      code: new lambda.InlineCode(readFileSync(srcPath, { encoding: 'utf-8', })),
+    const lambdaFunction1 = new lambda.Function(this, 'lambdafuncid1', { 
+      functionName: 'listener1_modify_function',
+      description: "A function which changes the target_group of listner1",
+      code: new lambda.InlineCode(readFileSync(funcPath1, { encoding: 'utf-8', })),
       handler: 'index.lambda_handler',
       timeout: cdk.Duration.seconds(30),
       memorySize: 128,
@@ -117,17 +156,36 @@ export class NlbProjectStack extends cdk.Stack {
       role: myRole, 
       environment: {
           "LOG_LEVEL": "INFO",
-          "TARGET1_ARN": target1.targetGroupArn,
-          "TARGET2_ARN": target2.targetGroupArn,
-          "LISTENER_ARN": listener1.listenerArn,
-          "NLB_ARN": nlb.loadBalancerArn
+          "L1TARGET1_ARN": l1target1.targetGroupArn,
+          "L1TARGET2_ARN": l1target2.targetGroupArn,
+          "LISTENER1_ARN": listener1.listenerArn,
+      }
+    });
+    const lambdaFunction2 = new lambda.Function(this, 'lambdafuncid2', { 
+      functionName: 'listener2_modify_function',
+      description: "A function which changes the target_group of listener2",
+      code: new lambda.InlineCode(readFileSync(funcPath2, { encoding: 'utf-8', })),
+      handler: 'index.lambda_handler',
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 128,
+      runtime: lambda.Runtime.PYTHON_3_7,
+      reservedConcurrentExecutions: 1,
+      retryAttempts: 1,
+      maxEventAge: cdk.Duration.hours(1),
+      role: myRole, 
+      environment: {
+          "LOG_LEVEL": "INFO",
+          "L2TARGET1_ARN": l2target1.targetGroupArn,
+          "L2TARGET2_ARN": l2target2.targetGroupArn,
+          "LISTENER2_ARN": listener2.listenerArn,
       }
     });
 
-    //Cloudwatch Events Rule
+   //Cloudwatch Events Bus
     const event_bus = this.node.tryGetContext('project')['event_bus'];
     const defaultbus = EventBus.fromEventBusArn(this, "defaultid", event_bus);
-    const rule = new ruleCdk.Rule(this, "newRule", {
+  //Rule1
+    const rule1 = new ruleCdk.Rule(this, "newRule1", {
       description: "Trigger Lamba when Instance1 goes down",
       eventPattern: {
         'source': ["aws.ec2"],
@@ -138,6 +196,20 @@ export class NlbProjectStack extends cdk.Stack {
         }},
       eventBus: defaultbus
     });   
-    rule.addTarget(new targets.LambdaFunction(lambdaFunction));
+    rule1.addTarget(new targets.LambdaFunction(lambdaFunction1));
+    //Rule2
+    const rule2 = new ruleCdk.Rule(this, "newRule2", {
+       description: "Trigger Lamba when Instance3 goes down",
+       eventPattern: {
+         'source': ["aws.ec2"],
+         'detail-type' : ["EC2 Instance State-change Notification"],
+         'detail': {
+           "state": ["stopping", "shutting-down"],
+           "instance-id": [instance3_id],
+         }},
+       eventBus: defaultbus
+     });   
+     rule2.addTarget(new targets.LambdaFunction(lambdaFunction2));
+
   }
 }
